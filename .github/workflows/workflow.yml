@@ -1,0 +1,58 @@
+name: Build vimrc
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build.yml'
+      - '**.vim'
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:stable-slim
+    permissions:
+      contents: write
+    steps:
+      - name: Install deps
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git vim-nox ca-certificates
+          rm -rf /var/lib/apt/lists/*
+
+      - uses: actions/checkout@v4
+
+      - name: Trust workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Concatenate
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          DATE=$(date -u +%Y-%m-%d)
+          HEADER="\" Built from ${{ github.repository }} @ $SHA on $DATE"
+          
+          mkdir -p out/linux out/windows out/wsl
+          printf '%s\n' "$HEADER" | cat - common.vim linux.vim         > out/linux/vimrc
+          printf '%s\n' "$HEADER" | cat - common.vim windows.vim       > out/windows/_vimrc
+          printf '%s\n' "$HEADER" | cat - common.vim linux.vim wsl.vim > out/wsl/vimrc
+          cp README.md out
+
+      - name: Smoke test
+        run: |
+          for f in out/*/[._]vimrc out/*/vimrc; do
+            vim -E -u "$f" -c 'qa!' < /dev/null
+          done
+
+      - name: Publish to dist branch
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout --orphan dist
+          git rm -rf . > /dev/null
+          mv out/* .
+          rmdir out
+          git add .
+          git commit -m "Build from ${{ github.sha }}"
+          git push -f origin dist
