@@ -1,0 +1,306 @@
+" Built from fenjen/vimrc @ 9da802a on 2026-05-18
+" Window and OS settings
+set nocompatible
+set langmenu=en_US
+let $LANG='en_US'
+syntax on                           " Enable syntax highlighting
+behave xterm                        " Alternative: mswin
+set hidden                          " Automatically set buffer hidden when editing new buffers
+set go=gcrLteAb                     " Gray menu items (g), use console dialogs (c), right-hand scrollbar (r), left-hand scrollbar on vertical split (L), tearoff menu items (t), add tab pages (e), copy in visual mode uses clipboard (Aa)
+set showtabline=1                   " Show tabs when available
+set cmdheight=2                     " 2 commandline lines (reduces 'press enter' messages)
+set showcmd                         " Shows incomplete commands and displays the number of selected characters / lines in visual mode
+set laststatus=2                    " Always show status line
+set display=lastline                " Show incomplete last lines
+set sidescroll=1                    " Do not jump when scrolling right, scroll char by char
+set scrolloff=3                     " Always keep 3 lines below or above cursor in view
+set sidescrolloff=3                 " Always keep 3 characters left or right from cursor in view
+set guifont=Consolas:h10:cANSI:qDRAFT
+" set guifont=Cascadia_Code:h10:cANSI:qDRAFT
+if has("gui_running")
+	set lines=45 columns=180        " Create a bigger window when starting
+	" au GUIEnter * simalt ~x       " Maximize vim when starting
+endif
+set number                          " Line numbers
+" set relativenumber
+set backspace=indent,eol,start      " Enable backspace removing indentation, end of lines and characters before edit start point
+
+" Use OS clipboard for vim operations
+if has('unnamedplus')
+	set clipboard=unnamedplus " X11/wayland
+else
+	set clipboard=unnamed " Windows
+endif
+
+" but do not overwrite clipboard for cw/cas/cip etc.
+nnoremap c "_c
+nnoremap C "_C
+xnoremap c "_c
+
+nnoremap s "_s
+nnoremap S "_S
+xnoremap s "_s
+xnoremap p "_dP
+
+set history=1000                    " Keep history of n edits
+set viminfo='100,<50,s10,h,n$userprofile/_viminfo
+set autochdir                       " Automatically chdir to buffer
+set linebreak                       " Break lines after words rather than characters (given 'wrap' is on)
+set splitright                      " Put new split windows right
+set splitbelow                      " Put new split windows below
+set showmatch                       " Show matching brackets
+set incsearch                       " Search for pattern while typing
+set hlsearch                        " Highlight search matches (toggle with <C-k>)
+set ignorecase                      " Don't consider case when searching (with smartcase exception)
+set smartcase                       " Only consider case when there's an upper case letter in search string
+set fileformats=unix,dos            " Use Unix linebreaks for default
+set isfname-={,},:                  " When editing tex files, enable vim to "gf" to file in statements like \include{<file>}
+set encoding=utf-8                  " Set default encoding to UTF-8
+set fileencodings=ucs-bom,utf-8,default,latin1
+set wildignore+=*.class,*.dvi,*.aux,*.ps,*.pdf      " Add these extensions (+=) to list of ignored files when pressing tab key for auto completion
+set formatoptions=tcroqnlj          " Format options: t=auto wrap, croj=comment leader, q=format comments, n=number, l=keep long lines
+set autoindent                      " Copy indentation from previous line
+set nocindent                       " Indent behaviour for { } /* */ ( ) ...
+set nosmartindent                   " Similar to cindent (This is only effective if nocindent)
+set smartindent                     " Similar to cindent (This is only effective if nocindent)
+set shiftwidth=0                    " Indentation width
+set tabstop=4                       " Note: Setting 'tabstop' to any other value than 8 can make your file appear wrong in many places (e.g., when printing it)
+set softtabstop=0                   " Turn off mixture of spaces and tabs
+set noexpandtab                     " Don't expand tabs to spaces
+set nosmarttab                      " Delete tab width spaces when using spaces for indentation
+set nojoinspaces                    " Don't put two spaces when joining lines [or when autoformatting (set fo+=a), gq etc.] behind . ! ?
+set confirm                         " ask to save unsaved buffers instead of fail
+set statusline=%1*%.10Y\ %2*%.60F%1*\ [%M%R]\ [buf\ %3*%n%1*]\ [0x%B]\ [%3*%3l,%3c%1*]\ [offset:\ %o,\ %p%%]\ %{&endofline?'':'[noeol]'}
+set diffopt=vertical
+
+" Colors
+" Shift+F7 / Shift+F8 to flip through colorschemes.
+" Some colorschemes support both light and dark backgrounds; for those, the desired mode is read from g:default_background.
+" Set g:default_background to 'light' or 'dark' to force a preference, or leave it empty to capture &background on the first toggle.
+"
+" light: default delek morning peachpuff shine zellner
+" dark: blue darkblue desert elflord evening habamax industry koehler murphy pablo ron slate sorbet torte unokai zaibatsu
+" both: catppucchin lunaperche quiet retrobox wildcharm
+let g:default_background = ''
+let g:colors = getcompletion('', 'color')
+
+func! NextColor()
+	let idx = index(g:colors, g:colors_name, 0, 1)
+	return (idx + 1 >= len(g:colors) ? g:colors[0] : g:colors[idx + 1])
+endfunc
+func! PrevColor()
+    let idx = index(g:colors, g:colors_name, 0, 1)
+	return (idx - 1 < 0 ? g:colors[-1] : g:colors[idx - 1])
+endfunc
+
+function! s:ChangeColor(name)
+	if empty(g:default_background)
+		let g:default_background = &background
+	endif
+	let &background = g:default_background
+	execute 'colorscheme ' . a:name
+endfunction
+
+nnoremap <S-F7> :call <SID>ChangeColor(PrevColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
+nnoremap <S-F8> :call <SID>ChangeColor(NextColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
+
+function! Colors()
+	hi! User1 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+	hi! User2 guifg=white guibg=#8c99b2 ctermfg=white ctermbg=darkblue
+	hi! User3 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+	hi! LineNr guifg=#555555
+	hi! EndOfBuffer guifg=#555555
+	if &background == "dark"
+		hi! Normal guibg=#20202b
+	else
+		hi! Normal guibg=#FFFFFF
+	endif
+endfunction
+
+augroup MyColors
+	autocmd!
+	autocmd VimEnter,Syntax,ColorScheme,FileType,SourcePost * call Colors()
+augroup END
+
+
+" Hotkeys
+" -------
+inoremap <S-CR>   <ESC>o " insert mode: shift-enter → insert line below
+inoremap <C-S-CR> <ESC>O " insert mode: ctrl-shift-enter → insert line above
+nnoremap <silent> <C-k>    :set hls!<CR> " normal mode: ctrl-k toggle search result highlighting
+vnoremap <Tab> >gv " visual mode: tab - indent visually
+vnoremap <S-Tab> <gv " visual mode: shift tab - unindent visually
+" normal mode, and no tabs: ctrl pageup/pagedown: cycle buffers
+nnoremap <C-PageUp>   :silent if tabpagenr("$") == 1 \| bp \| else \| tabp \| endif<CR>
+nnoremap <C-PageDown> :silent if tabpagenr("$") == 1 \| bn \| else \| tabn \| endif<CR>
+" \d diff clipboard with buffer
+nnoremap <leader>d :vnew<cr>:setlocal nobuflisted buftype=nofile bufhidden=wipe noswapfile<cr>:put +<cr>:1delete<cr>:diffthis<cr><c-w>p:diffthis<cr>
+nnoremap <silent> <leader>c :%y +<CR>:echo "clipboard copy"<CR>   " write buffer to clipboard
+
+" F12 read vimrc, shift F12 edit vimrc
+let g:my_vimrc =
+  \   filereadable($MYVIMRC)         ? $MYVIMRC
+  \ : filereadable('/etc/vim/vimrc') ? '/etc/vim/vimrc'
+  \ : filereadable($VIM . '/_vimrc') ? $VIM . '/_vimrc'
+  \ : ''
+
+nnoremap <F12>   :execute 'source ' . g:my_vimrc<CR>
+nnoremap <S-F12> :execute 'edit '   . g:my_vimrc<CR>
+
+nnoremap <c-q> :qall<CR>
+
+autocmd FileType sh                             nnoremap <buffer> <F11> :silent! write!<CR>:execute '!bash ' . shellescape(expand('%'))<CR>
+autocmd FileType php,python,ruby,perl,lua,java  nnoremap <buffer> <F11> :silent! write!<CR>:execute '!' . &filetype . ' ' . shellescape(expand('%'))<CR>
+
+
+" Automation
+" ----------
+"
+" Detect filetype after saving file
+au BufWritePost * filetype detect
+
+" When editing a file, always jump to the last known cursor position. Don't do
+" it when the position is invalid or when inside an event handler (happens
+" when dropping a file on gvim). Also don't do it when the mark is in the
+" first line, that is the default position when opening a file.
+autocmd BufReadPost *
+        \ if line("'\"") > 1 && line("'\"") <= line("$") |
+        \   exe "normal! g`\"" |
+        \ endif
+
+" In diff mode, start maximized and equal sizes
+if has("gui_running")
+	if &diff
+		autocmd VimResized * wincmd =
+		autocmd GuiEnter * simalt ~x
+	endif
+endif
+
+" Wipe empty buffers when opening a buffer
+function! CleanEmptyBuffers()
+	let buffers = filter(range(1, bufnr('$')), 'buflisted(v:val) && empty(bufname(v:val)) && bufwinnr(v:val)<0 && !getbufvar(v:val, "&mod")')
+	if !empty(buffers)
+		exe 'bw ' . join(buffers, ' ')
+	endif
+endfunction
+au BufEnter * silent call CleanEmptyBuffers()
+
+" Strip trailing whitespace on save
+function! <SID>StripTrailingWhitespaces()
+	let l = line(".")
+	let c = col(".")
+	%s/\s\+$//e
+	call cursor(l, c)
+endfun
+autocmd BufWritePre python,php,java :call <SID>StripTrailingWhitespaces()
+
+
+" Filetypes
+" ---------
+"
+filetype plugin indent on           " Execute scripts from ftplugin directories
+
+
+" text files
+au BufNewFile,BufRead *.tex  setlocal expandtab textwidth=80 nocin nosi formatoptions=tcql grepprg=grep\ -nH\ $*
+au BufNewFile,BufRead *.txt  setlocal nocin nosi
+
+" close { automatically
+let g:filetype_inc="php"
+au Filetype php        inoremap <buffer> { {<CR>}<ESC>O
+au FileType javascript inoremap <buffer> { {<CR>}<ESC>O
+au FileType java       inoremap <buffer> { {<CR>}<ESC>O
+
+" Python
+au FileType  python    set expandtab tabstop=4 shiftwidth=4 softtabstop=-1 smarttab
+
+" Java
+autocmd FileType java   :iabbr sout System.out.println();<left><left>
+
+
+
+" Plugins
+" -------
+"
+" Search visual selection
+" visual mode: * and #
+vnoremap <silent> * :<C-U>
+			\let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+			\gvy/<C-R><C-R>=substitute(
+			\escape(@", '/\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+			\gV:call setreg('"', old_reg, old_regtype)<CR>
+vnoremap <silent> # :<C-U>
+			\let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+			\gvy?<C-R><C-R>=substitute(
+			\escape(@", '?\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+			\gV:call setreg('"', old_reg, old_regtype)<CR>
+
+" SQL
+"
+" stop some sql plugin annoyances
+let g:omni_sql_no_default_maps = 1
+
+" Log file analysis
+" visual selection → global filter rule generator
+" type \d in visual mode to grep -v the selection
+"   - pattern may span multiple lines
+"   - pattern treats whitespace as \s+
+"   - pattern treats numbers as \d+
+vnoremap <leader>d :<C-U>echo RemoveSelectionFromBuffer(1)<CR>
+function! s:GetVisualSelection()
+	let [l1, c1] = getpos("'<")[1:2]
+	let [l2, c2] = getpos("'>")[1:2]
+
+	if l1 > l2 || (l1 == l2 && c1 > c2)
+		let [l1, c1, l2, c2] = [l2, c2, l1, c1]
+	endif
+
+	let lines = getline(l1, l2)
+	if empty(lines)
+		return []
+	endif
+	let lines[-1] = lines[-1][: c2 - 1]
+	let lines[0]  = lines[0][c1 - 1:]
+	return lines
+endfunction
+
+function! RemoveSelectionFromBuffer(ignoreNumbers)
+	let lines = s:GetVisualSelection()
+	if empty(lines)
+		return 'no selection'
+	endif
+	" escape for verynomagic regex
+	call map(lines, {_, v -> escape(v, '\/&')})
+
+	if a:ignoreNumbers
+		call map(lines, {_, v -> substitute(v, '\d\+', '\\d\\+', 'g')})
+	endif
+
+	let pattern = join(lines, '\_.\{-}')
+
+	let before = line('$')
+	let pos = getpos('.')
+	silent execute 'g/\V' . pattern . '/d_'
+
+	call setpos('.', pos)
+
+	let deleted = before - line('$')
+
+	return printf('%d line(s) removed', deleted)
+endfunction
+
+if exists('*plug#begin')
+	call plug#begin()
+
+	Plug 'fenjen/vim-plugin-vry'
+
+	call plug#end()
+endif
+set background=dark
+colorscheme slate
+
+set tgc
+set directory=~/tmp,/var/tmp,/tmp,.
+set novisualbell
+set t_u7=
+set t_vb=
