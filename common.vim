@@ -16,15 +16,31 @@ set scrolloff=3                     " Always keep 3 lines below or above cursor 
 set sidescrolloff=3                 " Always keep 3 characters left or right from cursor in view
 set guifont=Consolas:h10:cANSI:qDRAFT
 " set guifont=Cascadia_Code:h10:cANSI:qDRAFT
-if !exists("g:done_vimrc") && has("gui_running")
-	set lines=40 columns=160        " Create a bigger window when starting
+if has("gui_running")
+	set lines=45 columns=180        " Create a bigger window when starting
 	" au GUIEnter * simalt ~x       " Maximize vim when starting
-	let g:done_vimrc = 1
 endif
 set number                          " Line numbers
 " set relativenumber
 set backspace=indent,eol,start      " Enable backspace removing indentation, end of lines and characters before edit start point
-set clipboard=unnamed               " Always use * register for clipboard operations
+
+" Use OS clipboard for vim operations
+if has('unnamedplus')
+	set clipboard=unnamedplus " X11/wayland
+else
+	set clipboard=unnamed " Windows
+endif
+
+" but do not overwrite clipboard for cw/cas/cip etc.
+nnoremap c "_c
+nnoremap C "_C
+xnoremap c "_c
+
+nnoremap s "_s
+nnoremap S "_S
+xnoremap s "_s
+xnoremap p "_dP
+
 set history=1000                    " Keep history of n edits
 set viminfo='100,<50,s10,h,n$userprofile/_viminfo
 set autochdir                       " Automatically chdir to buffer
@@ -54,7 +70,7 @@ set nosmarttab                      " Delete tab width spaces when using spaces 
 set nojoinspaces                    " Don't put two spaces when joining lines [or when autoformatting (set fo+=a), gq etc.] behind . ! ?
 set confirm                         " ask to save unsaved buffers instead of fail
 set statusline=%1*%.10Y\ %2*%.60F%1*\ [%M%R]\ [buf\ %3*%n%1*]\ [0x%B]\ [%3*%3l,%3c%1*]\ [offset:\ %o,\ %p%%]\ %{&endofline?'':'[noeol]'}
-
+set diffopt=vertical
 
 " Colors
 " Shift+F7 / Shift+F8 to flip through colorschemes.
@@ -68,55 +84,59 @@ let g:default_background = ''
 let g:colors = getcompletion('', 'color')
 
 func! NextColor()
-    let idx = index(g:colors, g:colors_name, 0, 1)
-    return (idx + 1 >= len(g:colors) ? g:colors[0] : g:colors[idx + 1])
+	let idx = index(g:colors, g:colors_name, 0, 1)
+	return (idx + 1 >= len(g:colors) ? g:colors[0] : g:colors[idx + 1])
 endfunc
 func! PrevColor()
     let idx = index(g:colors, g:colors_name, 0, 1)
-    return (idx - 1 < 0 ? g:colors[-1] : g:colors[idx - 1])
+	return (idx - 1 < 0 ? g:colors[-1] : g:colors[idx - 1])
 endfunc
 
 function! s:ChangeColor(name)
-    if empty(g:default_background)
-        let g:default_background = &background
-    endif
-    let &background = g:default_background
-    execute 'colorscheme ' . a:name
+	if empty(g:default_background)
+		let g:default_background = &background
+	endif
+	let &background = g:default_background
+	execute 'colorscheme ' . a:name
 endfunction
 
 nnoremap <S-F7> :call <SID>ChangeColor(PrevColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
 nnoremap <S-F8> :call <SID>ChangeColor(NextColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
 
 function! Colors()
-    hi! User1 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
-    hi! User2 guifg=white guibg=#8c99b2 ctermfg=white ctermbg=darkblue
-    hi! User3 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
-    hi! LineNr guifg=#555555
-    hi! EndOfBuffer guifg=#555555
-    if &background == "dark"
-        hi! Normal guibg=#20202b
-    else
-        hi! Normal guibg=#FFFFFF
-    endif
+	hi! User1 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+	hi! User2 guifg=white guibg=#8c99b2 ctermfg=white ctermbg=darkblue
+	hi! User3 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+	hi! LineNr guifg=#555555
+	hi! EndOfBuffer guifg=#555555
+	if &background == "dark"
+		hi! Normal guibg=#20202b
+	else
+		hi! Normal guibg=#FFFFFF
+	endif
 endfunction
 
 augroup MyColors
-    autocmd!
-    autocmd VimEnter,Syntax,ColorScheme,FileType,SourcePost * call Colors()
+	autocmd!
+	autocmd VimEnter,Syntax,ColorScheme,FileType,SourcePost * call Colors()
 augroup END
 
 
 " Hotkeys
 " -------
-ino <S-CR>   <ESC>o " insert mode: shift-enter → insert line below
-ino <C-S-CR> <ESC>O " insert mode: ctrl-shift-enter → insert line above
-nno <C-k>    :set hls!<CR> " normal mode: ctrl-k toggle search result highlighting
-vno <Tab> >gv " visual mode: tab - indent visually
-vno <S-Tab> <gv " visual mode: shift tab - unindent visually
+inoremap <S-CR>   <ESC>o " insert mode: shift-enter → insert line below
+inoremap <C-S-CR> <ESC>O " insert mode: ctrl-shift-enter → insert line above
+nnoremap <silent> <C-k>    :set hls!<CR> " normal mode: ctrl-k toggle search result highlighting
+vnoremap <Tab> >gv " visual mode: tab - indent visually
+vnoremap <S-Tab> <gv " visual mode: shift tab - unindent visually
 " normal mode, and no tabs: ctrl pageup/pagedown: cycle buffers
-nno <C-PageUp>   :silent if tabpagenr("$") == 1 \| bp \| else \| tabp \| endif<CR>
-nno <C-PageDown> :silent if tabpagenr("$") == 1 \| bn \| else \| tabn \| endif<CR>
-" F12 read vimrc shift F12 edit vimrc
+nnoremap <C-PageUp>   :silent if tabpagenr("$") == 1 \| bp \| else \| tabp \| endif<CR>
+nnoremap <C-PageDown> :silent if tabpagenr("$") == 1 \| bn \| else \| tabn \| endif<CR>
+" \d diff clipboard with buffer
+nnoremap <leader>d :vnew<cr>:setlocal nobuflisted buftype=nofile bufhidden=wipe noswapfile<cr>:put +<cr>:1delete<cr>:diffthis<cr><c-w>p:diffthis<cr>
+nnoremap <silent> <leader>c :%y +<CR>:echo "clipboard copy"<CR>   " write buffer to clipboard
+
+" F12 read vimrc, shift F12 edit vimrc
 let g:my_vimrc =
   \   filereadable($MYVIMRC)         ? $MYVIMRC
   \ : filereadable('/etc/vim/vimrc') ? '/etc/vim/vimrc'
@@ -126,7 +146,7 @@ let g:my_vimrc =
 nnoremap <F12>   :execute 'source ' . g:my_vimrc<CR>
 nnoremap <S-F12> :execute 'edit '   . g:my_vimrc<CR>
 
-nno <c-q> :qall<CR>
+nnoremap <c-q> :qall<CR>
 
 autocmd FileType sh                             nnoremap <buffer> <F11> :silent! write!<CR>:execute '!bash ' . shellescape(expand('%'))<CR>
 autocmd FileType php,python,ruby,perl,lua,java  nnoremap <buffer> <F11> :silent! write!<CR>:execute '!' . &filetype . ' ' . shellescape(expand('%'))<CR>
@@ -157,19 +177,19 @@ endif
 
 " Wipe empty buffers when opening a buffer
 function! CleanEmptyBuffers()
-    let buffers = filter(range(1, bufnr('$')), 'buflisted(v:val) && empty(bufname(v:val)) && bufwinnr(v:val)<0 && !getbufvar(v:val, "&mod")')
-    if !empty(buffers)
-        exe 'bw ' . join(buffers, ' ')
-    endif
+	let buffers = filter(range(1, bufnr('$')), 'buflisted(v:val) && empty(bufname(v:val)) && bufwinnr(v:val)<0 && !getbufvar(v:val, "&mod")')
+	if !empty(buffers)
+		exe 'bw ' . join(buffers, ' ')
+	endif
 endfunction
 au BufEnter * silent call CleanEmptyBuffers()
 
 " Strip trailing whitespace on save
 function! <SID>StripTrailingWhitespaces()
-    let l = line(".")
-    let c = col(".")
-    %s/\s\+$//e
-    call cursor(l, c)
+	let l = line(".")
+	let c = col(".")
+	%s/\s\+$//e
+	call cursor(l, c)
 endfun
 autocmd BufWritePre python,php,java :call <SID>StripTrailingWhitespaces()
 
@@ -214,83 +234,64 @@ vnoremap <silent> # :<C-U>
 			\escape(@", '?\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
 			\gV:call setreg('"', old_reg, old_regtype)<CR>
 
-" Tabularize
-"
-" visual mode: (shift) tab
-inoremap <silent> <S-Tab> <TAB><Esc>:call <SID>ealign()<CR>a
-function! s:ealign()
-	let p = '^.*        \s.*$'
-	if exists(':Tabularize') && getline('.') =~# '^.*    ' && (getline(line('.')-1) =~# p || getline(line('.')+1) =~# p)
-		let column = strlen(substitute(getline('.')[0:col('.')],'[^ ]','','g'))
-		let position = strlen(matchstr(getline('.')[0:col('.')],'.* \s*\zs.*'))
-		Tabularize/    /l1
-		normal! 0
-		call search(repeat('[^ ]*           ',column).'\s\{-\}'.repeat('.',position),'ce',line('.'))
-	endif
-endfunction
-
-
 " SQL
 "
 " stop some sql plugin annoyances
 let g:omni_sql_no_default_maps = 1
 
 " Log file analysis
-"
-" visual mode: d, D
-vnoremap d :<C-U>echo RemoveSelectionFromBuffer(0)<CR>
-vnoremap D :<C-U>echo RemoveSelectionFromBuffer(1)<CR>
-function! GetVisualSelection()
-	if mode() == "v"
-		let [line_start, column_start] = getpos("v")[1:2]
-		let [line_end, column_end] = getpos(".")[1:2]
-	else
-		let [line_start, column_start] = getpos("'<")[1:2]
-		let [line_end, column_end] = getpos("'>")[1:2]
-	end
-	if (line2byte(line_start)+column_start) > (line2byte(line_end)+column_end)
-		let [line_start, column_start, line_end, column_end] =
-					\   [line_end, column_end, line_start, column_start]
-	end
-	let lines = getline(line_start, line_end)
-	if len(lines) == 0
-		return ''
+" visual selection → global filter rule generator
+" type \d in visual mode to grep -v the selection
+"   - pattern may span multiple lines
+"   - pattern treats whitespace as \s+
+"   - pattern treats numbers as \d+
+vnoremap <leader>d :<C-U>echo RemoveSelectionFromBuffer(1)<CR>
+function! s:GetVisualSelection()
+	let [l1, c1] = getpos("'<")[1:2]
+	let [l2, c2] = getpos("'>")[1:2]
+
+	if l1 > l2 || (l1 == l2 && c1 > c2)
+		let [l1, c1, l2, c2] = [l2, c2, l1, c1]
 	endif
-	let lines[-1] = lines[-1][: column_end - 1]
-	let lines[0] = lines[0][column_start - 1:]
+
+	let lines = getline(l1, l2)
+	if empty(lines)
+		return []
+	endif
+	let lines[-1] = lines[-1][: c2 - 1]
+	let lines[0]  = lines[0][c1 - 1:]
 	return lines
 endfunction
 
-" Removes lines matching the selected text from buffer.
 function! RemoveSelectionFromBuffer(ignoreNumbers)
-	let lines = GetVisualSelection() " selected lines
-	" Escape backslashes and slashes (delimiters)
-	call map(lines, {k, v -> substitute(v, '\\\|/', '\\&', 'g')})
-	if a:ignoreNumbers == 1
-		" Substitute all numbers with \s*\d\s* - in formatted output matching
-		" lines may have whitespace instead of numbers. All backslashes need
-		" to be escaped because \V (very nomagic) will be used.
-		call map(lines, {k, v -> substitute(v, '\s*\d\+\s*', '\\s\\*\\d\\+\\s\\*', 'g')})
+	let lines = s:GetVisualSelection()
+	if empty(lines)
+		return 'no selection'
 	endif
-	let blc = line('$') " number of lines in buffer (before deletion)
-	let vlc = len(lines) " number of selected lines
-	let pattern = join(lines, '\_.') " support multiline patterns
-	let cmd = ':g/\V' . pattern . '/d_' . vlc " delete matching lines (d_3)
-	let pos = getpos('v') " save position
-	execute "silent " . cmd
-	call setpos('.', pos) " restore position
-	let dlc = blc - line('$') " number of deleted lines
-	let dmc = dlc / vlc " number of deleted matches
-	let cmd = substitute(cmd, '\(.\{50\}\).*', '\1...', '') " command output
-	let lout = dlc . ' line' . (dlc == 1 ? '' : 's')
-	let mout = '(' . dmc . ' match' . (dmc == 1 ? '' : 'es') . ')'
-	return printf('%s removed: %s', (vlc == 1 ? lout : lout . ' ' . mout), cmd)
+	" escape for verynomagic regex
+	call map(lines, {_, v -> escape(v, '\/&')})
+
+	if a:ignoreNumbers
+		call map(lines, {_, v -> substitute(v, '\d\+', '\\d\\+', 'g')})
+	endif
+
+	let pattern = join(lines, '\_.\{-}')
+
+	let before = line('$')
+	let pos = getpos('.')
+	silent execute 'g/\V' . pattern . '/d_'
+
+	call setpos('.', pos)
+
+	let deleted = before - line('$')
+
+	return printf('%d line(s) removed', deleted)
 endfunction
 
 if exists('*plug#begin')
-  call plug#begin()
+	call plug#begin()
 
-  Plug 'fenjen/vim-plugin-vry'
+	Plug 'fenjen/vim-plugin-vry'
 
-  call plug#end()
+	call plug#end()
 endif
