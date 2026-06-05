@@ -42,7 +42,7 @@ xnoremap s "_s
 xnoremap p "_dP
 
 set history=1000                    " Keep history of n edits
-set viminfo='100,<50,s10,h,n$userprofile/_viminfo
+let &viminfo = "'100,<50,s10,h,n" . expand('~') . '/_viminfo'
 set autochdir                       " Automatically chdir to buffer
 set linebreak                       " Break lines after words rather than characters (given 'wrap' is on)
 set splitright                      " Put new split windows right
@@ -80,46 +80,49 @@ set diffopt=vertical
 " light: default delek morning peachpuff shine zellner
 " dark: blue darkblue desert elflord evening habamax industry koehler murphy pablo ron slate sorbet torte unokai zaibatsu
 " both: catppucchin lunaperche quiet retrobox wildcharm
-let g:default_background = ''
-let g:colors = getcompletion('', 'color')
+if exists('*getcompletion')
 
-func! NextColor()
-	let idx = index(g:colors, g:colors_name, 0, 1)
-	return (idx + 1 >= len(g:colors) ? g:colors[0] : g:colors[idx + 1])
-endfunc
-func! PrevColor()
-    let idx = index(g:colors, g:colors_name, 0, 1)
-	return (idx - 1 < 0 ? g:colors[-1] : g:colors[idx - 1])
-endfunc
+	let g:default_background = ''
+	let g:colors = getcompletion('', 'color')
 
-function! s:ChangeColor(name)
-	if empty(g:default_background)
-		let g:default_background = &background
-	endif
-	let &background = g:default_background
-	execute 'colorscheme ' . a:name
-endfunction
+	func! NextColor()
+		let idx = index(g:colors, g:colors_name, 0, 1)
+		return (idx + 1 >= len(g:colors) ? g:colors[0] : g:colors[idx + 1])
+	endfunc
+	func! PrevColor()
+		let idx = index(g:colors, g:colors_name, 0, 1)
+		return (idx - 1 < 0 ? g:colors[-1] : g:colors[idx - 1])
+	endfunc
 
-nnoremap <S-F7> :call <SID>ChangeColor(PrevColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
-nnoremap <S-F8> :call <SID>ChangeColor(NextColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
+	function! s:ChangeColor(name)
+		if empty(g:default_background)
+			let g:default_background = &background
+		endif
+		let &background = g:default_background
+		execute 'colorscheme ' . a:name
+	endfunction
 
-function! Colors()
-	hi! User1 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
-	hi! User2 guifg=white guibg=#8c99b2 ctermfg=white ctermbg=darkblue
-	hi! User3 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
-	hi! LineNr guifg=#555555
-	hi! EndOfBuffer guifg=#555555
-	if &background == "dark"
-		hi! Normal guibg=#20202b
-	else
-		hi! Normal guibg=#FFFFFF
-	endif
-endfunction
+	nnoremap <S-F7> :call <SID>ChangeColor(PrevColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
+	nnoremap <S-F8> :call <SID>ChangeColor(NextColor())<CR>:echo g:colors_name .. ' (g:default_background=' .. g:default_background .. ')'<CR>
 
-augroup MyColors
-	autocmd!
-	autocmd VimEnter,Syntax,ColorScheme,FileType,SourcePost * call Colors()
-augroup END
+	function! Colors()
+		hi! User1 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+		hi! User2 guifg=white guibg=#8c99b2 ctermfg=white ctermbg=darkblue
+		hi! User3 guifg=black guibg=#8c99b2 ctermfg=white ctermbg=blue
+		hi! LineNr guifg=#555555
+		hi! EndOfBuffer guifg=#555555
+		if &background == "dark"
+			hi! Normal guibg=#20202b
+		else
+			hi! Normal guibg=#FFFFFF
+		endif
+	endfunction
+
+	augroup MyColors
+		autocmd!
+		autocmd VimEnter,Syntax,ColorScheme,FileType,SourcePost * call Colors()
+	augroup END
+endif
 
 
 " Hotkeys
