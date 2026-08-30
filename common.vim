@@ -15,6 +15,12 @@ set sidescroll=1                    " Do not jump when scrolling right, scroll c
 set scrolloff=3                     " Always keep 3 lines below or above cursor in view
 set sidescrolloff=3                 " Always keep 3 characters left or right from cursor in view
 set guifont=Consolas:h10:cANSI:qDRAFT
+set undofile
+set autoread
+set undodir=~/.vim/.undo//
+set backupdir=~/.vim/.backup//
+set directory=~/.vim/.swp//
+
 " set guifont=Cascadia_Code:h10:cANSI:qDRAFT
 if has("gui_running")
 	set lines=45 columns=180        " Create a bigger window when starting
@@ -42,7 +48,7 @@ xnoremap s "_s
 xnoremap p "_dP
 
 set history=1000                    " Keep history of n edits
-let &viminfo = "'100,<50,s10,h,n" . expand('~') . '/_viminfo'
+set viminfo='100,<50,s10,h,n$userprofile/_viminfo
 set autochdir                       " Automatically chdir to buffer
 set linebreak                       " Break lines after words rather than characters (given 'wrap' is on)
 set splitright                      " Put new split windows right
@@ -127,17 +133,25 @@ endif
 
 " Hotkeys
 " -------
-inoremap <S-CR>   <ESC>o " insert mode: shift-enter → insert line below
-inoremap <C-S-CR> <ESC>O " insert mode: ctrl-shift-enter → insert line above
-nnoremap <silent> <C-k>    :set hls!<CR> " normal mode: ctrl-k toggle search result highlighting
-vnoremap <Tab> >gv " visual mode: tab - indent visually
-vnoremap <S-Tab> <gv " visual mode: shift tab - unindent visually
+" insert mode: shift-enter → insert line below
+inoremap <S-CR>   <ESC>o
+" insert mode: ctrl-shift-enter → insert line above
+inoremap <C-S-CR> <ESC>O
+" normal mode: ctrl-k toggle search result highlighting
+nnoremap <silent> <C-k>    :set hls!<CR>
+" visual mode: tab - indent visually
+vnoremap <Tab> >gv
+" visual mode: shift tab - unindent visually
+vnoremap <S-Tab> <gv
 " normal mode, and no tabs: ctrl pageup/pagedown: cycle buffers
 nnoremap <C-PageUp>   :silent if tabpagenr("$") == 1 \| bp \| else \| tabp \| endif<CR>
 nnoremap <C-PageDown> :silent if tabpagenr("$") == 1 \| bn \| else \| tabn \| endif<CR>
 " \d diff clipboard with buffer
 nnoremap <leader>d :vnew<cr>:setlocal nobuflisted buftype=nofile bufhidden=wipe noswapfile<cr>:put +<cr>:1delete<cr>:diffthis<cr><c-w>p:diffthis<cr>
-nnoremap <silent> <leader>c :%y +<CR>:echo "clipboard copy"<CR>   " write buffer to clipboard
+" write buffer to clipboard
+nnoremap <silent> <leader>c :%y +<CR>:echo "clipboard copy"<CR>
+" write buffer to clipboard
+nnoremap <silent> <leader><Insert> :%y +<CR>:echo "copied buffer to clipboard"<CR>
 
 " F12 read vimrc, shift F12 edit vimrc
 let g:my_vimrc =

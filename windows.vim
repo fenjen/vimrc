@@ -1,7 +1,5 @@
 colorscheme sorbet
 
-set directory=$TEMP,c:\tmp,c:\temp,.
-
 " Syntax highlight copy (Y in v mode)
 function! HlCopy() range
 	let g:html_font = "Consolas"
