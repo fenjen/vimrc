@@ -305,10 +305,9 @@ function! RemoveSelectionFromBuffer(ignoreNumbers)
 	return printf('%d line(s) removed', deleted)
 endfunction
 
-if exists('*plug#begin')
-	call plug#begin()
+let g:jumpmenu_map = '<F3>'
 
-	Plug 'fenjen/vim-plugin-vry'
-
-	call plug#end()
-endif
+silent! call plug#begin()
+silent!	Plug 'fenjen/vim-plugin-vry'
+silent! Plug 'fenjen/vim-plugin-jumpmenu'
+silent! call plug#end()
