@@ -17,9 +17,30 @@ set sidescrolloff=3                 " Always keep 3 characters left or right fro
 set guifont=Consolas:h10:cANSI:qDRAFT
 set undofile
 set autoread
-set undodir=~/.vim/.undo//
-set backupdir=~/.vim/.backup//
-set directory=~/.vim/.swp//
+
+" Create and use ~/.vim/.undo, ~/.vim/.backup, ~/.vim/.swp if ~/.vim exists and is writable
+" set undodir=~/.vim/.undo//
+" set backupdir=~/.vim/.backup//
+" set directory=~/.vim/.swp//
+let s:vimdir = expand(has('win32') ? '~/vimfiles' : '~/.vim')
+if isdirectory(s:vimdir) && filewritable(s:vimdir) == 2
+  for [s:opt, s:sub] in [
+        \ ['undodir',   '.undo'],
+        \ ['backupdir', '.backup'],
+        \ ['directory', '.swp'],
+        \ ]
+    let s:path = s:vimdir . '/' . s:sub
+    if !isdirectory(s:path)
+      try
+        call mkdir(s:path, 'p', 0700)
+      catch
+      endtry
+    endif
+    if filewritable(s:path) == 2
+      execute 'let &' . s:opt . ' = ' . string(escape(s:path, ',') . '//')
+    endif
+  endfor
+endif
 
 " set guifont=Cascadia_Code:h10:cANSI:qDRAFT
 if has("gui_running")
